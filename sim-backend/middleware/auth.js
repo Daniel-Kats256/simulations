@@ -2,39 +2,38 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 require('dotenv').config();
 
-// Middleware to verify the JWT and attach the user to the request
+// Middleware to authenticate JWT token
 const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ message: 'Access token is required' });
+  }
+
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ message: 'Access token required' });
-    }
-
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findByPk(payload.id);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Optionally fetch full user details from database
+    const user = await User.findByPk(decoded.id);
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Attach user info to request object
     req.user = {
       id: user.id,
-      name: user.name,
       username: user.username,
-      role: user.role,
+      role: user.role
     };
-
+    
     next();
-  } catch (err) {
-    console.error('JWT verification error:', err.message);
-    return res.status(401).json({ message: 'Invalid or expired token' });
+  } catch (error) {
+    console.error('Auth error:', error);
+    return res.status(403).json({ message: 'Invalid or expired token' });
   }
 };
 
-// Middleware to restrict access by user roles
+// Middleware to authorize specific roles
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -42,7 +41,9 @@ const authorizeRoles = (...allowedRoles) => {
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Forbidden: Insufficient rights' });
+      return res.status(403).json({ 
+        message: `Access denied. Required roles: ${allowedRoles.join(', ')}. Your role: ${req.user.role}` 
+      });
     }
 
     next();
@@ -51,5 +52,5 @@ const authorizeRoles = (...allowedRoles) => {
 
 module.exports = {
   authenticateToken,
-  authorizeRoles,
+  authorizeRoles
 };

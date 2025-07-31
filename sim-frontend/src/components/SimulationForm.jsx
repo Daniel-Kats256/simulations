@@ -2,125 +2,152 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-
 export default function SimulationForm() {
   const [simulationName, setSimulationName] = useState('');
   const [simulationType, setSimulationType] = useState('DDoS');
-  const [status, setStatus] = useState('pending');
-  const [result, setResult] = useState('');
+  const [config, setConfig] = useState({});
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
 
   const handleSubmit = async e => {
     e.preventDefault();
     const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId'); // Assuming userId is stored on login
 
-    if (!userId) {
-      setMessage('User ID is missing. Please log in again.');
+    if (!token) {
+      setMessage('Authentication token is missing. Please log in again.');
       return;
     }
 
+    if (!simulationName.trim()) {
+      setMessage('Simulation name is required.');
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage('');
+
     try {
-      await axios.post(
+      const response = await axios.post(
         'http://localhost:5000/api/simulations',
         {
-          simulationName,
+          simulationName: simulationName.trim(),
           simulationType,
-          launchedBy: parseInt(userId),
-          status,
-          result,
+          config
         },
         {
           headers: {
-            Authorization: 'Bearer ' + token,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
           },
         }
       );
-      setMessage('Simulation launched successfully.');
+      
+      setMessage('Simulation launched successfully! It will run in the background.');
       setSimulationName('');
       setSimulationType('DDoS');
-      setStatus('pending');
-      setResult('');
+      setConfig({});
+      
+      // Optionally navigate to simulations list after a delay
+      setTimeout(() => {
+        navigate('/dashboard/simulations');
+      }, 2000);
+      
     } catch (error) {
-      console.error(error);
-      setMessage('Failed to launch simulation.');
+      console.error('Simulation launch error:', error);
+      
+      if (error.response?.data?.message) {
+        setMessage(`Error: ${error.response.data.message}`);
+      } else if (error.response?.status === 401) {
+        setMessage('Authentication failed. Please log in again.');
+      } else if (error.response?.status === 403) {
+        setMessage('Access denied. You do not have permission to launch simulations.');
+      } else {
+        setMessage('Failed to launch simulation. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const simulationDescriptions = {
+    'DDoS': 'Distributed Denial of Service attack simulation - tests system resilience under high traffic load',
+    'Malware': 'Malware detection simulation - tests antivirus and security monitoring systems',
+    'Phishing': 'Phishing attack simulation - tests user awareness and email security filters',
+    'Ransomware': 'Ransomware attack simulation - tests backup systems and recovery procedures',
+    'SQL Injection': 'SQL injection attack simulation - tests database security and input validation'
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 border rounded shadow mt-8 space-y-4">
-      <h2 className="text-xl font-semibold">Launch Simulation</h2>
-      {message && <p className="text-sm text-red-600">{message}</p>}
+    <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-6 border rounded-lg shadow-lg mt-8 space-y-6 bg-white">
+      <h2 className="text-2xl font-bold text-gray-800">Launch Cybersecurity Simulation</h2>
+      
+      {message && (
+        <div className={`p-3 rounded ${message.includes('Error') || message.includes('Failed') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {message}
+        </div>
+      )}
 
       <div>
-        <label className="block mb-1 font-medium">Simulation Name</label>
+        <label className="block mb-2 font-medium text-gray-700">Simulation Name</label>
         <input
           type="text"
-          className="border p-2 rounded w-full"
+          className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           value={simulationName}
           onChange={e => setSimulationName(e.target.value)}
-          placeholder="e.g., Cloud DDoS Test"
+          placeholder="e.g., Cloud DDoS Test - Production Environment"
           required
+          disabled={isLoading}
         />
       </div>
 
       <div>
-        <label className="block mb-1 font-medium">Simulation Type</label>
+        <label className="block mb-2 font-medium text-gray-700">Simulation Type</label>
         <select
-          className="border p-2 rounded w-full"
+          className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           value={simulationType}
           onChange={e => setSimulationType(e.target.value)}
+          disabled={isLoading}
         >
-          <option value="DDoS">DDoS</option>
-          <option value="Malware">Malware</option>
-          <option value="Phishing">Phishing</option>
-          <option value="Ransomware">Ransomware</option>
+          <option value="DDoS">DDoS Attack</option>
+          <option value="Malware">Malware Detection</option>
+          <option value="Phishing">Phishing Campaign</option>
+          <option value="Ransomware">Ransomware Attack</option>
           <option value="SQL Injection">SQL Injection</option>
         </select>
+        <p className="text-sm text-gray-600 mt-1">
+          {simulationDescriptions[simulationType]}
+        </p>
       </div>
 
-      <div>
-        <label className="block mb-1 font-medium">Status</label>
-        <select
-          className="border p-2 rounded w-full"
-          value={status}
-          onChange={e => setStatus(e.target.value)}
-        >
-          <option value="pending">Pending</option>
-          <option value="running">Running</option>
-          <option value="completed">Completed</option>
-          <option value="failed">Failed</option>
-        </select>
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="font-medium text-gray-700 mb-2">Simulation Details</h3>
+        <p className="text-sm text-gray-600">
+          • This simulation will run in the background<br/>
+          • Results will be available in the simulations dashboard<br/>
+          • Execution time: 2-5 seconds<br/>
+          • Status updates in real-time
+        </p>
       </div>
 
-      <div>
-        <label className="block mb-1 font-medium">Result (optional)</label>
-        <textarea
-          className="border p-2 rounded w-full"
-          value={result}
-          onChange={e => setResult(e.target.value)}
-          placeholder="Leave blank if not yet completed"
-        />
-      </div>
       <div className="flex justify-between">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors"
+          disabled={isLoading}
         >
           Back
         </button>
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+          disabled={isLoading}
         >
-          Launch Simulation
+          {isLoading ? 'Launching...' : 'Launch Simulation'}
         </button>
       </div>
-
     </form>
   );
 }
