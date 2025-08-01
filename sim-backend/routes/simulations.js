@@ -4,18 +4,139 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Simulate different types of cybersecurity attacks
+const simulateAttack = async (simulationType, config = {}) => {
+  const delay = Math.random() * 3000 + 2000; // 2-5 seconds simulation time
+  
+  await new Promise(resolve => setTimeout(resolve, delay));
+  
+  const simulations = {
+    'DDoS': {
+      success: Math.random() > 0.3,
+      metrics: {
+        requestsPerSecond: Math.floor(Math.random() * 10000) + 1000,
+        targetResponseTime: Math.floor(Math.random() * 500) + 100,
+        successfulBlocks: Math.floor(Math.random() * 80) + 20,
+        duration: Math.floor(delay / 1000)
+      }
+    },
+    'Malware': {
+      success: Math.random() > 0.25,
+      metrics: {
+        detectionRate: Math.floor(Math.random() * 40) + 60,
+        filesScanned: Math.floor(Math.random() * 50000) + 10000,
+        threatsFound: Math.floor(Math.random() * 5) + 1,
+        quarantined: Math.floor(Math.random() * 3) + 1
+      }
+    },
+    'Phishing': {
+      success: Math.random() > 0.4,
+      metrics: {
+        emailsSent: Math.floor(Math.random() * 100) + 50,
+        clickRate: Math.floor(Math.random() * 30) + 5,
+        credentialsHarvested: Math.floor(Math.random() * 10) + 1,
+        detected: Math.random() > 0.6
+      }
+    },
+    'Ransomware': {
+      success: Math.random() > 0.2,
+      metrics: {
+        filesEncrypted: Math.floor(Math.random() * 1000) + 100,
+        encryptionTime: Math.floor(Math.random() * 30) + 5,
+        detectionTime: Math.floor(Math.random() * 60) + 10,
+        recoveryPossible: Math.random() > 0.3
+      }
+    },
+    'SQL Injection': {
+      success: Math.random() > 0.35,
+      metrics: {
+        queriesAttempted: Math.floor(Math.random() * 20) + 5,
+        successful: Math.floor(Math.random() * 8) + 1,
+        dataExfiltrated: Math.floor(Math.random() * 1000) + 100,
+        blocked: Math.random() > 0.5
+      }
+    }
+  };
+
+  const result = simulations[simulationType] || simulations['DDoS'];
+  
+  return {
+    status: result.success ? 'completed' : 'failed',
+    result: JSON.stringify({
+      simulationType,
+      success: result.success,
+      metrics: result.metrics,
+      timestamp: new Date().toISOString(),
+      message: result.success ? 
+        `${simulationType} simulation completed successfully` : 
+        `${simulationType} simulation failed - countermeasures effective`
+    })
+  };
+};
+
 // Launch new simulation (admin and analyst only)
 router.post('/', authenticateToken, authorizeRoles('admin', 'analyst'), async (req, res) => {
-    console.log('Authenticated user:', req.user);
+  console.log('Authenticated user:', req.user);
+  console.log('Request body:', req.body);
+  
   try {
+    const { simulationName, simulationType, status, result } = req.body;
+    
+    // Validate required fields
+    if (!simulationName || !simulationType) {
+      return res.status(400).json({ 
+        message: 'simulationName and simulationType are required' 
+      });
+    }
+
+    // Create initial simulation record
     const simulation = await Simulation.create({
-      config: req.body.config,
+      simulationName,
+      simulationType,
+      config: req.body.config || {},
       launchedBy: req.user.id,
+      status: 'running',
       result: null,
     });
-    res.status(201).json(simulation);
+
+    // Run the simulation asynchronously
+    simulateAttack(simulationType, req.body.config)
+      .then(async (simulationResult) => {
+        // Update simulation with results
+        await simulation.update({
+          status: simulationResult.status,
+          result: simulationResult.result
+        });
+      })
+      .catch(async (error) => {
+        console.error('Simulation error:', error);
+        await simulation.update({
+          status: 'failed',
+          result: JSON.stringify({
+            error: 'Simulation execution failed',
+            message: error.message,
+            timestamp: new Date().toISOString()
+          })
+        });
+      });
+
+    res.status(201).json({
+      message: 'Simulation launched successfully',
+      simulation: {
+        id: simulation.id,
+        simulationName: simulation.simulationName,
+        simulationType: simulation.simulationType,
+        status: simulation.status,
+        launchedBy: simulation.launchedBy,
+        createdAt: simulation.createdAt
+      }
+    });
   } catch (err) {
-    res.status(400).json({ message: 'Failed to launch simulation', error: err.message });
+    console.error('Error creating simulation:', err);
+    res.status(400).json({ 
+      message: 'Failed to launch simulation', 
+      error: err.message 
+    });
   }
 });
 
@@ -24,13 +145,43 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     let simulations;
     if (req.user.role === 'admin') {
-      simulations = await Simulation.findAll();
+      simulations = await Simulation.findAll({
+        order: [['createdAt', 'DESC']]
+      });
     } else {
-      simulations = await Simulation.findAll({ where: { launchedBy: req.user.id } });
+      simulations = await Simulation.findAll({ 
+        where: { launchedBy: req.user.id },
+        order: [['createdAt', 'DESC']]
+      });
     }
     res.json(simulations);
   } catch (err) {
+    console.error('Error fetching simulations:', err);
     res.status(500).json({ message: 'Error fetching simulations' });
+  }
+});
+
+// Get specific simulation by ID
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    let whereClause = { id };
+    
+    // Non-admin users can only see their own simulations
+    if (req.user.role !== 'admin') {
+      whereClause.launchedBy = req.user.id;
+    }
+    
+    const simulation = await Simulation.findOne({ where: whereClause });
+    
+    if (!simulation) {
+      return res.status(404).json({ message: 'Simulation not found' });
+    }
+    
+    res.json(simulation);
+  } catch (err) {
+    console.error('Error fetching simulation:', err);
+    res.status(500).json({ message: 'Error fetching simulation' });
   }
 });
 

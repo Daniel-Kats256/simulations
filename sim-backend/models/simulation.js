@@ -15,6 +15,10 @@ const Simulation = sequelize.define('Simulation', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  config: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
   launchedBy: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -27,14 +31,10 @@ const Simulation = sequelize.define('Simulation', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
+}, {
+  tableName: 'simulations',
+  timestamps: true,
+  underscored: true,
 });
 
 module.exports = Simulation;
