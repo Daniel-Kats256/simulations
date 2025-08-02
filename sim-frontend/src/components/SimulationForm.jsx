@@ -5,7 +5,11 @@ import { useNavigate } from 'react-router-dom';
 export default function SimulationForm() {
   const [simulationName, setSimulationName] = useState('');
   const [simulationType, setSimulationType] = useState('DDoS');
-  const [config, setConfig] = useState({});
+  const [config, setConfig] = useState({
+    threatType: 'DDoS',
+    cloudRegion: 'us-east-1',
+    severity: 'medium'
+  });
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -106,7 +110,10 @@ export default function SimulationForm() {
         <select
           className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           value={simulationType}
-          onChange={e => setSimulationType(e.target.value)}
+          onChange={e => {
+            setSimulationType(e.target.value);
+            setConfig(prev => ({ ...prev, threatType: e.target.value }));
+          }}
           disabled={isLoading}
         >
           <option value="DDoS">DDoS Attack</option>
@@ -118,6 +125,36 @@ export default function SimulationForm() {
         <p className="text-sm text-gray-600 mt-1">
           {simulationDescriptions[simulationType]}
         </p>
+      </div>
+
+      <div>
+        <label className="block mb-2 font-medium text-gray-700">Cloud Region</label>
+        <select
+          className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          value={config.cloudRegion}
+          onChange={e => setConfig(prev => ({ ...prev, cloudRegion: e.target.value }))}
+          disabled={isLoading}
+        >
+          <option value="us-east-1">US East (N. Virginia)</option>
+          <option value="us-west-2">US West (Oregon)</option>
+          <option value="eu-west-1">Europe (Ireland)</option>
+          <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block mb-2 font-medium text-gray-700">Severity Level</label>
+        <select
+          className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          value={config.severity}
+          onChange={e => setConfig(prev => ({ ...prev, severity: e.target.value }))}
+          disabled={isLoading}
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
       </div>
 
       <div className="bg-gray-50 p-4 rounded-lg">

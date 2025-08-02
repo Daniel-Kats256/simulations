@@ -20,7 +20,19 @@ router.put('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) 
     res.json({ message: 'User updated' });
   } catch {
     res.status(500).json({ message: 'Update failed' });
-  }users.js
+  }
+});
+
+// Delete user
+router.delete('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    await user.destroy();
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Delete failed' });
+  }
 });
 
 module.exports = router;

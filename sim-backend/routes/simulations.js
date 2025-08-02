@@ -146,11 +146,21 @@ router.get('/', authenticateToken, async (req, res) => {
     let simulations;
     if (req.user.role === 'admin') {
       simulations = await Simulation.findAll({
+        include: [{
+          model: User,
+          as: 'Launcher',
+          attributes: ['id', 'name', 'username']
+        }],
         order: [['createdAt', 'DESC']]
       });
     } else {
       simulations = await Simulation.findAll({ 
         where: { launchedBy: req.user.id },
+        include: [{
+          model: User,
+          as: 'Launcher',
+          attributes: ['id', 'name', 'username']
+        }],
         order: [['createdAt', 'DESC']]
       });
     }
@@ -182,6 +192,21 @@ router.get('/:id', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Error fetching simulation:', err);
     res.status(500).json({ message: 'Error fetching simulation' });
+  }
+});
+
+// Delete simulation (admin only)
+router.delete('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+  try {
+    const simulation = await Simulation.findByPk(req.params.id);
+    if (!simulation) {
+      return res.status(404).json({ message: 'Simulation not found' });
+    }
+    await simulation.destroy();
+    res.json({ message: 'Simulation deleted' });
+  } catch (err) {
+    console.error('Error deleting simulation:', err);
+    res.status(500).json({ message: 'Error deleting simulation' });
   }
 });
 
