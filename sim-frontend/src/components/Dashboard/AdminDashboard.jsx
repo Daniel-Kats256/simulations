@@ -21,7 +21,7 @@ export default function AdminDashboard() {
   // Fetch users
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/users', {
+      const res = await axios.get('http://localhost:5000/api/users', {
         headers: { Authorization: 'Bearer ' + token },
       });
       setUsers(res.data);
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   // Delete a user
   const deleteUser = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/admin/users/${id}`, {
+      await axios.delete(`http://localhost:5000/api/users/${id}`, {
         headers: { Authorization: 'Bearer ' + token },
       });
       fetchUsers();
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
                 <td className="border p-2">{sim.config?.threatType}</td>
                 <td className="border p-2">{sim.config?.cloudRegion}</td>
                 <td className="border p-2">{sim.config?.severity}</td>
-                <td className="border p-2">{sim.launchedBy}</td>
+                <td className="border p-2">{sim.Launcher?.name || sim.launchedBy}</td>
                 <td className="border p-2">
                   <button
                     className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
