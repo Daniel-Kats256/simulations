@@ -9,12 +9,7 @@ dotenv.config();
 
 // Ensure critical env vars exist
 if (
-  !process.env.JWT_SECRET ||
-  !process.env.DB_HOST ||
-  !process.env.DB_PORT ||
-  !process.env.DB_NAME ||
-  !process.env.DB_USER
-) {
+  !process.env.JWT_SECRET) {
   console.error('❌ Missing required environment variables. Check your .env file.');
   process.exit(1);
 }
