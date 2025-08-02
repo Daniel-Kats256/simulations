@@ -20,7 +20,7 @@ router.put('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) 
     res.json({ message: 'User updated' });
   } catch {
     res.status(500).json({ message: 'Update failed' });
-  }users.js
+  }
 });
 
 module.exports = router;
