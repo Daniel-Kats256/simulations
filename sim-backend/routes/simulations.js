@@ -1,5 +1,5 @@
 const express = require('express');
-const { Simulation } = require('../models');
+const { Simulation, User } = require('../models');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 const router = express.Router();

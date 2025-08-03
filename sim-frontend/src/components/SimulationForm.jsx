@@ -12,24 +12,45 @@ export default function SimulationForm() {
   });
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const navigate = useNavigate();
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!simulationName.trim()) {
+      errors.simulationName = 'Simulation name is required';
+    } else if (simulationName.trim().length < 3) {
+      errors.simulationName = 'Simulation name must be at least 3 characters';
+    } else if (simulationName.trim().length > 100) {
+      errors.simulationName = 'Simulation name must be less than 100 characters';
+    }
+
+    if (!simulationType) {
+      errors.simulationType = 'Please select a simulation type';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async e => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    
+    if (!validateForm()) {
+      setMessage('Please fix the validation errors below.');
+      return;
+    }
 
+    const token = localStorage.getItem('token');
     if (!token) {
       setMessage('Authentication token is missing. Please log in again.');
       return;
     }
 
-    if (!simulationName.trim()) {
-      setMessage('Simulation name is required.');
-      return;
-    }
-
     setIsLoading(true);
     setMessage('');
+    setValidationErrors({});
 
     try {
       const response = await axios.post(
@@ -96,13 +117,26 @@ export default function SimulationForm() {
         <label className="block mb-2 font-medium text-gray-700">Simulation Name</label>
         <input
           type="text"
-          className="border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className={`border p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            validationErrors.simulationName ? 'border-red-500 bg-red-50' : 'border-gray-300'
+          }`}
           value={simulationName}
-          onChange={e => setSimulationName(e.target.value)}
+          onChange={e => {
+            setSimulationName(e.target.value);
+            if (validationErrors.simulationName) {
+              setValidationErrors(prev => ({...prev, simulationName: undefined}));
+            }
+          }}
           placeholder="e.g., Cloud DDoS Test - Production Environment"
           required
           disabled={isLoading}
         />
+        {validationErrors.simulationName && (
+          <p className="text-red-600 text-sm mt-1">{validationErrors.simulationName}</p>
+        )}
+        <p className="text-gray-500 text-xs mt-1">
+          {simulationName.length}/100 characters
+        </p>
       </div>
 
       <div>
