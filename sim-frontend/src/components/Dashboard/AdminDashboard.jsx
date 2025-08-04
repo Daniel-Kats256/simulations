@@ -4,6 +4,8 @@ import axios from 'axios';
 export default function AdminDashboard() {
   const [simulations, setSimulations] = useState([]);
   const [users, setUsers] = useState([]);
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
   const token = localStorage.getItem('token');
 
   // Fetch simulations
@@ -54,6 +56,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDownload = async (type) => {
+    try {
+      setDownloadLoading(true);
+      setDownloadError('');
+      
+      const res = await axios.get(`http://localhost:5000/reports/download/${type}`, {
+        responseType: 'blob',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `simulation-report-${new Date().toISOString().split('T')[0]}.${type === 'xlsx' ? 'csv' : type}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+      setDownloadError(`Failed to download ${type.toUpperCase()} report. Please try again.`);
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchSimulations();
     fetchUsers();
@@ -62,6 +92,47 @@ export default function AdminDashboard() {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">Admin Dashboard</h1>
+
+      {/* Download Section */}
+      <div className="bg-white p-4 rounded-lg shadow-md mb-8">
+        <h3 className="text-lg font-semibold mb-4">📊 Export Reports</h3>
+        <div className="flex gap-4 mb-4">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            onClick={() => handleDownload('pdf')}
+            disabled={downloadLoading}
+          >
+            {downloadLoading ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                Generating...
+              </>
+            ) : (
+              'Download PDF Report'
+            )}
+          </button>
+          <button
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            onClick={() => handleDownload('xlsx')}
+            disabled={downloadLoading}
+          >
+            {downloadLoading ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                Generating...
+              </>
+            ) : (
+              'Download Excel Report'
+            )}
+          </button>
+        </div>
+        
+        {downloadError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {downloadError}
+          </div>
+        )}
+      </div>
 
       {/* Simulations Management */}
       <section className="mb-10">
@@ -84,7 +155,7 @@ export default function AdminDashboard() {
                 <td className="border p-2">{sim.config?.threatType}</td>
                 <td className="border p-2">{sim.config?.cloudRegion}</td>
                 <td className="border p-2">{sim.config?.severity}</td>
-                <td className="border p-2">{sim.Launcher?.name || sim.launchedBy}</td>
+                <td className="border p-2">{sim.Launcher?.username || `User ${sim.launchedBy}`}</td>
                 <td className="border p-2">
                   <button
                     className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
