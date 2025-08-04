@@ -33,7 +33,7 @@ export default function Toast({ message, type = 'info', isVisible, onClose, dura
           onClick={onClose}
           className="text-white hover:text-gray-200 font-bold text-lg"
         >
-          ×
+          
         </button>
       </div>
     </div>
