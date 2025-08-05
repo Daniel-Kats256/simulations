@@ -107,6 +107,52 @@ const seedDatabase = async () => {
           timestamp: new Date().toISOString(),
           message: 'Phishing simulation failed - countermeasures effective'
         })
+      },
+      {
+        simulationName: 'SQL Injection Assessment',
+        simulationType: 'SQL Injection',
+        config: {
+          threatType: 'SQL Injection',
+          cloudRegion: 'eu-central-1',
+          severity: 'medium'
+        },
+        launchedBy: viewer.id,
+        status: 'completed',
+        result: JSON.stringify({
+          simulationType: 'SQL Injection',
+          success: false,
+          metrics: {
+            queriesAttempted: 15,
+            successful: 0,
+            dataExfiltrated: 0,
+            blocked: true
+          },
+          timestamp: new Date().toISOString(),
+          message: 'SQL Injection simulation failed - countermeasures effective'
+        })
+      },
+      {
+        simulationName: 'Ransomware Simulation',
+        simulationType: 'Ransomware',
+        config: {
+          threatType: 'Ransomware',
+          cloudRegion: 'ap-southeast-1',
+          severity: 'high'
+        },
+        launchedBy: viewer.id,
+        status: 'completed',
+        result: JSON.stringify({
+          simulationType: 'Ransomware',
+          success: false,
+          metrics: {
+            filesEncrypted: 0,
+            encryptionTime: 0,
+            detectionTime: 2,
+            recoveryPossible: true
+          },
+          timestamp: new Date().toISOString(),
+          message: 'Ransomware simulation failed - countermeasures effective'
+        })
       }
     ];
 
