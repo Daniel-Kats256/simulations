@@ -18,6 +18,7 @@ if (
 const authRoutes = require('./routes/auth');
 const simulationRoutes = require('./routes/simulations');
 const userRoutes = require('./routes/users');
+const reportRoutes = require('./routes/reports');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/simulations', simulationRoutes);
 app.use('/api/users', userRoutes);
+app.use('/reports', reportRoutes);
 
 // === GLOBAL ERROR HANDLER ===
 app.use((err, req, res, next) => {

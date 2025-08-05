@@ -10,6 +10,8 @@ export default function AnalystDashboard() {
   const [selectedSimulation, setSelectedSimulation] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
 
   const fetchSimulations = useCallback(async (isAutoRefresh = false) => {
     try {
@@ -131,6 +133,35 @@ export default function AnalystDashboard() {
     return { ...baseStats, typeStats };
   }, [simulations]);
 
+  const handleDownload = async (type) => {
+    try {
+      setDownloadLoading(true);
+      setDownloadError('');
+      
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`http://localhost:5000/reports/download/${type}`, {
+        responseType: 'blob',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `simulation-report-${new Date().toISOString().split('T')[0]}.${type === 'xlsx' ? 'csv' : type}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+      setDownloadError(`Failed to download ${type.toUpperCase()} report. Please try again.`);
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">🔍 Analyst Dashboard</h1>
@@ -176,6 +207,47 @@ export default function AnalystDashboard() {
 
       <div className="bg-white p-4 rounded-lg shadow-md mb-8">
         <SimulationForm />
+      </div>
+
+      {/* Download Section */}
+      <div className="bg-white p-4 rounded-lg shadow-md mb-8">
+        <h3 className="text-lg font-semibold mb-4">📊 Export Reports</h3>
+        <div className="flex gap-4 mb-4">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            onClick={() => handleDownload('pdf')}
+            disabled={downloadLoading}
+          >
+            {downloadLoading ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                Generating...
+              </>
+            ) : (
+              'Download PDF Report'
+            )}
+          </button>
+          <button
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            onClick={() => handleDownload('xlsx')}
+            disabled={downloadLoading}
+          >
+            {downloadLoading ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                Generating...
+              </>
+            ) : (
+              'Download Excel Report'
+            )}
+          </button>
+        </div>
+        
+        {downloadError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {downloadError}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow-md">
@@ -226,6 +298,7 @@ export default function AnalystDashboard() {
                   <th className="px-4 py-3 font-medium text-gray-900">Status</th>
                   <th className="px-4 py-3 font-medium text-gray-900">Result</th>
                   <th className="px-4 py-3 font-medium text-gray-900">Duration</th>
+                  <th className="px-4 py-3 font-medium text-gray-900">Launched By</th>
                   <th className="px-4 py-3 font-medium text-gray-900">Created</th>
                   <th className="px-4 py-3 font-medium text-gray-900">Actions</th>
                 </tr>
@@ -262,6 +335,11 @@ export default function AnalystDashboard() {
                         )}
                       </div>
                     </td>
+                    <td className="px-4 py-3">
+                      <span className="text-gray-700 font-medium">
+                        {sim.Launcher?.username || `User ${sim.launchedBy}`}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">{new Date(sim.createdAt).toLocaleString()}</td>
                     <td className="px-4 py-3">
                       {sim.result && (
@@ -280,7 +358,7 @@ export default function AnalystDashboard() {
                 ))}
                 {simulations.length === 0 && !isLoading && (
                   <tr>
-                    <td colSpan="8" className="text-center p-8 text-gray-500">
+                    <td colSpan="9" className="text-center p-8 text-gray-500">
                       No simulations found. Launch your first simulation above!
                     </td>
                   </tr>
