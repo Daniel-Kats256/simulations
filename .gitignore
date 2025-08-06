@@ -1,1 +1,2 @@
 *.sqlite
+sim-backend/database.sqlite
