@@ -50,6 +50,57 @@ export default function ViewerDashboard() {
     }
   };
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getStatusBadge = (status) => {
+    const statusClasses = {
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      running: 'bg-blue-100 text-blue-800 border-blue-200',
+      completed: 'bg-green-100 text-green-800 border-green-200',
+      failed: 'bg-red-100 text-red-800 border-red-200'
+    };
+
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${statusClasses[status] || statusClasses.pending}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
+  };
+
+  const getResultSummary = (simulation) => {
+    if (simulation.status !== 'completed' || !simulation.result) {
+      return '-';
+    }
+
+    try {
+      const result = JSON.parse(simulation.result);
+      return (
+        <span className={`text-sm font-medium ${result.success ? 'text-green-600' : 'text-red-600'}`}>
+          {result.success ? 'Success' : 'Failed'}
+        </span>
+      );
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  const getSeverityBadge = (severity) => {
+    const severityClasses = {
+      low: 'bg-gray-100 text-gray-800 border-gray-200',
+      medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      high: 'bg-orange-100 text-orange-800 border-orange-200',
+      critical: 'bg-red-100 text-red-800 border-red-200'
+    };
+
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${severityClasses[severity] || severityClasses.medium}`}>
+        {severity ? severity.charAt(0).toUpperCase() + severity.slice(1) : 'Medium'}
+      </span>
+    );
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Viewer Dashboard</h1>
@@ -96,28 +147,54 @@ export default function ViewerDashboard() {
       </div>
 
       {/* Simulations Table */}
-      <table className="w-full border-collapse border text-sm">
-        <thead>
-          <tr>
-            <th className="border p-2">#</th>
-            <th className="border p-2">Threat Type</th>
-            <th className="border p-2">Cloud Region</th>
-            <th className="border p-2">Severity</th>
-            <th className="border p-2">Launched By</th>
-          </tr>
-        </thead>
-        <tbody>
-          {simulations.map((sim, index) => (
-            <tr key={sim.id}>
-              <td className="border p-2">{index + 1}</td>
-              <td className="border p-2">{sim.config.threatType}</td>
-              <td className="border p-2">{sim.config.cloudRegion}</td>
-              <td className="border p-2">{sim.config.severity}</td>
-              <td className="border p-2">{sim.Launcher?.username || `User ${sim.launchedBy}`}</td>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border text-sm">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border p-3 text-left font-medium">#</th>
+              <th className="border p-3 text-left font-medium">Simulation Name</th>
+              <th className="border p-3 text-left font-medium">Threat Type</th>
+              <th className="border p-3 text-left font-medium">Status</th>
+              <th className="border p-3 text-left font-medium">Severity</th>
+              <th className="border p-3 text-left font-medium">Cloud Region</th>
+              <th className="border p-3 text-left font-medium">Result</th>
+              <th className="border p-3 text-left font-medium">Launched By</th>
+              <th className="border p-3 text-left font-medium">Created</th>
+              <th className="border p-3 text-left font-medium">Updated</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {simulations.length > 0 ? (
+              simulations.map((sim, index) => (
+                <tr key={sim.id} className="hover:bg-gray-50">
+                  <td className="border p-3">{index + 1}</td>
+                  <td className="border p-3 font-medium">{sim.simulationName || 'Unnamed Simulation'}</td>
+                  <td className="border p-3">{sim.config?.threatType || sim.simulationType}</td>
+                  <td className="border p-3">{getStatusBadge(sim.status)}</td>
+                  <td className="border p-3">{getSeverityBadge(sim.config?.severity)}</td>
+                  <td className="border p-3">{sim.config?.cloudRegion || 'N/A'}</td>
+                  <td className="border p-3">{getResultSummary(sim)}</td>
+                  <td className="border p-3">{sim.Launcher?.username || `User ${sim.launchedBy}`}</td>
+                  <td className="border p-3 text-xs">{formatDate(sim.createdAt)}</td>
+                  <td className="border p-3 text-xs">{formatDate(sim.updatedAt)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="10" className="border p-6 text-center text-gray-500">
+                  No simulations found. Simulations launched by analysts and admins will appear here.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {simulations.length > 0 && (
+        <div className="mt-4 text-sm text-gray-600">
+          Showing {simulations.length} simulation{simulations.length !== 1 ? 's' : ''}
+        </div>
+      )}
     </div>
   );
 }
