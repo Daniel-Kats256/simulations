@@ -1,6 +1,7 @@
 // src/components/Auth/Register.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import { FaShieldAlt } from 'react-icons/fa';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -38,7 +39,12 @@ export default function Register() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 border rounded shadow bg-white">
+    <div className="max-w-md mx-auto p-6 bg-white">
+      <h1 className="mb-5 mt-5 flex justify-center items-center text-2xl font-bold">
+  <FaShieldAlt className="mr-2" />
+  SimulateSec
+</h1>
+
       <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
 
       {error && <p className="text-red-600 mb-2 text-center">{error}</p>}

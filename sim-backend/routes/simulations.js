@@ -144,7 +144,9 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'analyst'), async (r
 router.get('/', authenticateToken, async (req, res) => {
   try {
     let simulations;
-    if (req.user.role === 'admin') {
+    
+    // Admins and Viewers can see all simulations
+    if (req.user.role === 'admin' || req.user.role === 'viewer') {
       simulations = await Simulation.findAll({
         include: [{
           model: User,
@@ -153,7 +155,9 @@ router.get('/', authenticateToken, async (req, res) => {
         }],
         order: [['createdAt', 'DESC']]
       });
-    } else {
+    } 
+    // Other roles (like analyst) see only their simulations
+    else {
       simulations = await Simulation.findAll({ 
         where: { launchedBy: req.user.id },
         include: [{
@@ -164,6 +168,7 @@ router.get('/', authenticateToken, async (req, res) => {
         order: [['createdAt', 'DESC']]
       });
     }
+
     res.json(simulations);
   } catch (err) {
     console.error('Error fetching simulations:', err);
