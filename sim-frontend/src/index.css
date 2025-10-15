@@ -9,8 +9,20 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+   /* background-image: url('./assets/logo192.png'); */
+  background-size: cover;
+  /* background-position: center; */
+  background-repeat: no-repeat;
 }
-
+tbody{ 
+  /* background-color: white; */
+}
+.tbody{ 
+  /* background-color: white; */
+}
+h1{
+  /* color: white; */
+}
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

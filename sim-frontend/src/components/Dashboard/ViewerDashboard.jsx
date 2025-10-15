@@ -4,6 +4,10 @@ import axios from 'axios';
 export default function ViewerDashboard() {
   const [simulations, setSimulations] = useState([]);
 
+   const logout = () => {
+   
+    window.location.href = '/';
+  };
   useEffect(() => {
     const fetchSimulations = async () => {
       try {
@@ -137,6 +141,7 @@ export default function ViewerDashboard() {
               'Download Excel Report'
             )}
           </button>
+          <button className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600" onClick={logout}>Logout</button>
         </div>
         
         {downloadError && (

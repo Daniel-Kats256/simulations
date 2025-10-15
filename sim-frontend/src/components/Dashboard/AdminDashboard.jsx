@@ -8,6 +8,13 @@ export default function AdminDashboard() {
   const [downloadError, setDownloadError] = useState('');
   const token = localStorage.getItem('token');
 
+      const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('role');
+    localStorage.removeItem('name');
+    window.location.href = '/';
+  };
   // Fetch simulations
   const fetchSimulations = async () => {
     try {
@@ -96,6 +103,7 @@ export default function AdminDashboard() {
       {/* Download Section */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-8">
         <h3 className="text-lg font-semibold mb-4">📊 Export Reports</h3>
+       
         <div className="flex gap-4 mb-4">
           <button
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
@@ -125,6 +133,7 @@ export default function AdminDashboard() {
               'Download Excel Report'
             )}
           </button>
+           <button className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600" onClick={logout}>Logout</button>
         </div>
         
         {downloadError && (

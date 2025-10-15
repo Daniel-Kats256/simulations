@@ -86,7 +86,7 @@ export default function SimulationResultsModal({ isOpen, onClose, simulation }) 
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
           >
-            ×
+            
           </button>
         </div>
 

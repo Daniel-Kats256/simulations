@@ -11,7 +11,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 border rounded shadow">
+    <div className="max-w-md mx-auto mt-20 p-6 border rounded shadow tbody">
       {registerMode ? <Register /> : <Login />}
       <div className="text-center mt-4">
         <button

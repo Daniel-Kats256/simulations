@@ -13,6 +13,10 @@ export default function AnalystDashboard() {
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
 
+   const logout = () => {
+  
+    window.location.href = '/';
+  };
   const fetchSimulations = useCallback(async (isAutoRefresh = false) => {
     try {
       if (isAutoRefresh) {
@@ -241,6 +245,7 @@ export default function AnalystDashboard() {
               'Download Excel Report'
             )}
           </button>
+            <button className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600" onClick={logout}>Logout</button>
         </div>
         
         {downloadError && (

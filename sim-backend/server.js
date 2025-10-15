@@ -3,7 +3,6 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const sequelize = require('./config/database'); 
 
-
 // Load environment variables
 dotenv.config();
 

@@ -52,10 +52,10 @@ export default function Login() {
 
   return (
     <div className="max-w-md mx-auto p-6">
-       <h1 className="mb-5 mt-5 flex justify-center items-center text-2xl font-bold">
+       <h2 className="mb-5 mt-5 flex justify-center items-center text-3xl font-bold">
         <FaShieldAlt className="mr-2" />
         SimulateSec
-      </h1>
+      </h2>
       <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
       {error && <p className="text-red-600 mb-2">{error}</p>}
 
